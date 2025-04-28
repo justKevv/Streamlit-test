@@ -50,22 +50,22 @@ def show_login_page():
                 # Case 2: API returns a list directly like [id1, id2]
                 elif isinstance(data, list):
                      fetched_pot_ids = data # Directly use the list
-
-                # Now check if we got pot_ids from either case
-                if fetched_pot_ids is not None: # Check if pot_ids were successfully extracted
-                    if fetched_pot_ids: # Check if the list is not empty
-                        st.session_state['pot_ids'] = fetched_pot_ids
-                        st.session_state['logged_in'] = True
-                        st.session_state['selected_page'] = 'Dashboard' # Default to Dashboard after login
-                        logging.info(f"Login successful for chat_id: {chat_id_input}, pot_ids: {fetched_pot_ids}")
-                        st.rerun() # Rerun to reflect login state in main.py
-                    else:
-                        st.session_state['login_error'] = "No pots found for this Chat ID."
-                        logging.warning(f"No pots found for chat_id: {chat_id_input}")
+                if fetched_pot_ids: # Check if the list is not empty
+                    st.session_state['pot_ids'] = fetched_pot_ids
+                    st.session_state['logged_in'] = True
+                    st.session_state['selected_page'] = 'Dashboard' # Default to Dashboard after login
+                    logging.info(f"Login successful for chat_id: {chat_id_input}, pot_ids: {fetched_pot_ids}")
+                    st.rerun() # Rerun to reflect login state in main.py
                 else:
-                     # Handle cases where the API response is neither the expected dict nor a list
-                     st.session_state['login_error'] = "Invalid response format from server."
-                     logging.error(f"Invalid API response format for chat_id {chat_id_input}: {data}")
+                    st.session_state['login_error'] = "No pots found for this Chat ID."
+                    logging.warning(f"No pots found for chat_id: {chat_id_input}")
+                # # Now check if we got pot_ids from either case
+                # if fetched_pot_ids is not None: # Check if pot_ids were successfully extracted
+
+                # else:
+                #      # Handle cases where the API response is neither the expected dict nor a list
+                #      st.session_state['login_error'] = "Invalid response format from server."
+                #      logging.error(f"Invalid API response format for chat_id {chat_id_input}: {data}")
 
             except requests.exceptions.RequestException as e:
                 st.session_state['login_error'] = f"API Error: Could not connect or fetch data. {e}"
