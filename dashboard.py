@@ -8,108 +8,97 @@ import logging # Add logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class DashboardPage:
-    def __init__(self, pot_ids=None): # Keep accepting pot_ids, but primarily use session state
+    def __init__(self, pot_ids=None): # pot_ids argument is no longer strictly needed here
         self.title = 'Dashboard'
+        # self.__pot_ids = pot_ids # Remove storing pot_ids from init
         self.__base_url = 'https://api-smart-pot-test.vercel.app/find/data/'
         # Initialize placeholders dictionary
         self.__placeholders = {}
-        # Store pot_ids passed during init, but rely on session state for the loop
-        self.__initial_pot_ids = pot_ids if pot_ids else []
 
+        # No need for monitoring_active state anymore
+        # if 'monitoring_active' not in st.session_state:
+        #     st.session_state['monitoring_active'] = False
 
     def show(self):
-        # Fetch current pot_ids from session state on each run for display count
-        # The loop will use the IDs available when it starts
-        current_pot_ids = st.session_state.get('pot_ids', self.__initial_pot_ids) # Use initial if session state empty
+        # Fetch current pot_ids from session state on each run
+        current_pot_ids = st.session_state.get('pot_ids', [])
 
         st.title('Dashboard Overview 📈')
         st.write(f"Welcome back! Displaying data for {len(current_pot_ids)} pot(s).")
-        st.markdown("Click 'Start Monitoring' to begin viewing live data (this will block further interactions).")
-
-        # Button to start the blocking monitoring loop moved here
-        start_monitoring = st.button('Start Monitoring 👀 (Blocking)')
 
         if not current_pot_ids:
             st.warning("No pots associated with your account.")
-            # No rerun needed here in blocking mode
+            # Add a small delay and rerun even if no pots, to check again later
+            time.sleep(10)
+            st.rerun()
             return # Don't proceed if there are no pots
 
-        # --- Arrange pots in rows and create placeholders BEFORE the button check ---
-        self.__placeholders = {} # Clear/rebuild placeholders dict
-        pots_per_row = 3 # Pots per row
+        # Clear and rebuild placeholders dictionary for the current set of pots
+        self.__placeholders = {}
+
+        # --- Arrange pots in rows ---
+        pots_per_row = 3 # Adjust this number as needed for your layout preference
         num_pots = len(current_pot_ids)
 
         for i in range(0, num_pots, pots_per_row):
+            # Get the pot_ids for the current row
             row_pot_ids = current_pot_ids[i : i + pots_per_row]
-            cols = st.columns(len(row_pot_ids))
+            # Create columns for the current row
+            cols = st.columns(len(row_pot_ids)) # Use len(row_pot_ids) which is <= pots_per_row
 
+            # Iterate through the pots and columns for this row
             for j, pot_id in enumerate(row_pot_ids):
-                with cols[j]:
+                with cols[j]: # Use the column index 'j' for this row
                     st.subheader(f"Pot: {pot_id}")
+
+                    # Create nested columns for pH and Soil metrics
                     metric_cols = st.columns(2)
                     with metric_cols[0]:
                         ph_placeholder = st.empty()
                     with metric_cols[1]:
                         soil_placeholder = st.empty()
+
+                    # Chart placeholder remains below the metrics
                     chart_placeholder = st.empty()
 
-                    # Store placeholders
+                    # Store placeholders in the dictionary
                     self.__placeholders[pot_id] = {
                         'ph': ph_placeholder,
                         'soil': soil_placeholder,
                         'chart': chart_placeholder
                     }
-            # Optional divider (won't show until after loop starts if button clicked)
-            # if i + pots_per_row < num_pots:
-            #      st.divider()
 
-        # Check if the button was clicked *after* creating placeholders
-        if start_monitoring:
-            st.info("Monitoring started. The app will now continuously fetch data and may become unresponsive to other inputs.")
-            # Pass the current pot IDs to the loop function
-            self._run_monitoring_loop(current_pot_ids) # Enter the blocking loop
-        else:
-             st.info("Click 'Start Monitoring' above to see live data.")
-             # Optionally clear placeholders if needed when not monitoring
-             # self.__clear_all_placeholders()
+                    # Fetch and display data for this pot immediately
+                    self.__fetch_and_display_single_pot(pot_id)
+            # Add a horizontal rule between rows for better separation (optional)
+            if i + pots_per_row < num_pots:
+                 st.divider()
 
 
-    # Reintroduce the blocking _run_monitoring_loop method
-    def _run_monitoring_loop(self, pot_ids_to_monitor):
-        """Enters a blocking loop to continuously fetch and display data."""
-        if not pot_ids_to_monitor:
-             logging.warning("Monitoring loop started with no pot IDs.")
-             return # Exit if there's nothing to monitor
+        # Add sleep and rerun for automatic refresh (remains at the end)
+        refresh_interval = 10 # Refresh every 10 seconds
+        time.sleep(refresh_interval)
+        st.rerun()
 
-        while True: # The blocking loop
-            # Loop through each pot ID passed to the function
-            for pot_id in pot_ids_to_monitor:
-                # Defensive check: Ensure placeholder dict exists before fetching
-                if pot_id not in self.__placeholders:
-                     logging.warning(f"Placeholders for pot {pot_id} not found during loop.")
-                     # Attempt to display error in the column if possible (difficult without context)
-                     # Consider adding a general status area if this happens often
-                     continue # Skip if placeholders aren't ready
 
-                # Fetch and display data for this specific pot
-                self.__fetch_and_display_single_pot(pot_id)
-
-            # Wait before the next fetch cycle for all pots
-            # refresh_interval = 10 # Refresh every 10 seconds
-            # time.sleep(refresh_interval)
-            # No st.rerun() here
-
-    # Optional: Method to clear placeholders (if needed when stopped, though stopping isn't implemented here)
-    # def __clear_all_placeholders(self):
-    #      for pot_id in self.__placeholders:
-    #          # ... logic to empty ph, soil, chart placeholders ...
-    #          pass
-
+    # Remove the _run_monitoring_loop method entirely
+    # def _run_monitoring_loop(self):
+    #    """Enters a blocking loop to continuously fetch and display data."""
+    #    while True: # The blocking loop from the old approach
+    #        # Loop through each pot ID and update its data
+    #        for pot_id in self.__pot_ids:
+    #            # Defensive check: Ensure placeholder dict exists before fetching
+    #            if pot_id not in self.__placeholders:
+    #                 logging.warning(f"Placeholders for pot {pot_id} not found during loop.")
+    #                 continue # Skip if placeholders aren't ready
+    #            self.__fetch_and_display_single_pot(pot_id)
+    #        # Wait before the next fetch cycle for all pots
+    #        # time.sleep()
 
     def __fetch_and_display_single_pot(self, pot_id):
         # --- This method remains largely the same ---
         # It fetches data for one pot and updates its placeholders
-        # It now relies on self.__placeholders being correctly populated in show() before the loop starts
+        # It now relies on self.__placeholders being correctly populated in show()
         url = self.__base_url + str(pot_id)
         ph_placeholder = None
         soil_placeholder = None
@@ -117,9 +106,12 @@ class DashboardPage:
         try:
             # Ensure placeholders for this pot_id actually exist before trying to update them
             if pot_id not in self.__placeholders or not isinstance(self.__placeholders[pot_id], dict):
+                 # Log error, but maybe don't show st.error here as it clutters the dashboard on brief inconsistencies
                  logging.error(f"Placeholders dictionary for pot {pot_id} is missing or invalid during fetch.")
-                 # Cannot easily display error in the correct column from here in blocking mode
-                 time.sleep(1)
+                 # Optionally display a temporary message in the chart area
+                 # temp_chart_placeholder = st.empty() # Need a way to get the column context here, tricky
+                 # temp_chart_placeholder.warning(f"Pot {pot_id}: Waiting for UI...")
+                 time.sleep(1) # Small delay before next attempt
                  return
 
             # Safely get individual placeholders
@@ -130,12 +122,15 @@ class DashboardPage:
             # Check if individual placeholders were retrieved successfully
             if not ph_placeholder or not soil_placeholder or not chart_placeholder:
                  logging.error(f"One or more specific placeholders (ph, soil, chart) missing for pot {pot_id}.")
-                 # Cannot easily display error in the correct column from here
-                 time.sleep(1)
+                 # Attempt to display an error in the chart area if possible
+                 if chart_placeholder:
+                     chart_placeholder.warning(f"Pot {pot_id}: UI update pending...")
+                 # else: # If even chart placeholder is missing, log it but avoid st.error spam
+                 #     logging.error(f"Critical UI elements missing for pot {pot_id}.")
+                 time.sleep(1) # Small delay
                  return
 
             # Clear previous errors/messages in placeholders before fetching new data
-            # Important in blocking mode to clear previous errors shown in placeholders
             ph_placeholder.empty()
             soil_placeholder.empty()
             chart_placeholder.empty()
@@ -171,7 +166,6 @@ class DashboardPage:
                     else:
                          delta_soil_label = "N/A" # Indicate calculation wasn't possible
 
-
                 # Update placeholders for the specific pot
                 ph_placeholder.metric('pH Level 🌱', f'{ph}', delta_ph_label)
                 soil_placeholder.metric('Soil Level 🌍', f'{soil}', delta_soil_label)
@@ -188,14 +182,12 @@ class DashboardPage:
                     chart_cols.append('soil')
 
                 if chart_cols:
+                    # Ensure DataFrame has expected columns before plotting
                     df_to_plot = df[chart_cols].dropna()
                     if not df_to_plot.empty:
                          chart_placeholder.line_chart(df_to_plot)
                     else:
                          chart_placeholder.info("No valid chart data points.")
-                else:
-                    chart_placeholder.info("No chart data available.")
-
 
             else:
                 # Handle cases with no data or unexpected format
@@ -224,5 +216,7 @@ class DashboardPage:
                 #      ph_placeholder.error("Error")
                 # elif soil_placeholder:
                 #      soil_placeholder.error("Error")
+                # else:
+                #     st.error(log_msg) # Avoid global error spam
             except Exception as inner_e:
                  logging.error(f"Error trying to display error message for pot {pot_id}: {inner_e}")
