@@ -77,7 +77,7 @@ class DashboardPage:
                      continue # Skip if placeholders aren't ready
                 self.__fetch_and_display_single_pot(pot_id)
             # Wait before the next fetch cycle for all pots
-            time.sleep(10)
+            # time.sleep()
 
     def __fetch_and_display_single_pot(self, pot_id):
         # --- This method remains largely the same as before ---
