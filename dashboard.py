@@ -25,9 +25,6 @@ class DashboardPage:
 
         st.title('Dashboard Overview 📈')
         st.write(f"Welcome back! Displaying data for {len(current_pot_ids)} pot(s).")
-        # Remove the blocking loop button and related markdown
-        # st.markdown("Click 'Start Monitoring' to begin viewing live data (this will block further interactions).")
-        # start_monitoring = st.button('Start Monitoring 👀 (Blocking)')
 
         if not current_pot_ids:
             st.warning("No pots associated with your account.")
@@ -38,40 +35,47 @@ class DashboardPage:
 
         # Clear and rebuild placeholders dictionary for the current set of pots
         self.__placeholders = {}
-        cols = st.columns(len(current_pot_ids))
 
-        for i, pot_id in enumerate(current_pot_ids):
-            with cols[i]:
-                st.subheader(f"Pot: {pot_id}")
+        # --- Arrange pots in rows ---
+        pots_per_row = 4 # Adjust this number as needed for your layout preference
+        num_pots = len(current_pot_ids)
 
-                # Create nested columns for pH and Soil metrics
-                metric_cols = st.columns(2)
-                with metric_cols[0]:
-                    ph_placeholder = st.empty()
-                with metric_cols[1]:
-                    soil_placeholder = st.empty()
+        for i in range(0, num_pots, pots_per_row):
+            # Get the pot_ids for the current row
+            row_pot_ids = current_pot_ids[i : i + pots_per_row]
+            # Create columns for the current row
+            cols = st.columns(len(row_pot_ids)) # Use len(row_pot_ids) which is <= pots_per_row
 
-                # Chart placeholder remains below the metrics
-                chart_placeholder = st.empty()
+            # Iterate through the pots and columns for this row
+            for j, pot_id in enumerate(row_pot_ids):
+                with cols[j]: # Use the column index 'j' for this row
+                    st.subheader(f"Pot: {pot_id}")
 
-                # Store placeholders in the dictionary
-                self.__placeholders[pot_id] = {
-                    'ph': ph_placeholder,
-                    'soil': soil_placeholder,
-                    'chart': chart_placeholder
-                }
+                    # Create nested columns for pH and Soil metrics
+                    metric_cols = st.columns(2)
+                    with metric_cols[0]:
+                        ph_placeholder = st.empty()
+                    with metric_cols[1]:
+                        soil_placeholder = st.empty()
 
-                # Fetch and display data for this pot immediately
-                self.__fetch_and_display_single_pot(pot_id)
+                    # Chart placeholder remains below the metrics
+                    chart_placeholder = st.empty()
 
-        # Remove the logic related to the start_monitoring button
-        # if start_monitoring:
-        #     st.info("Monitoring started. The app will now continuously fetch data and may become unresponsive to other inputs.")
-        #     self._run_monitoring_loop() # Enter the blocking loop
-        # else:
-        #      st.info("Click 'Start Monitoring' above to see live data.")
+                    # Store placeholders in the dictionary
+                    self.__placeholders[pot_id] = {
+                        'ph': ph_placeholder,
+                        'soil': soil_placeholder,
+                        'chart': chart_placeholder
+                    }
 
-        # Add sleep and rerun for automatic refresh
+                    # Fetch and display data for this pot immediately
+                    self.__fetch_and_display_single_pot(pot_id)
+            # Add a horizontal rule between rows for better separation (optional)
+            if i + pots_per_row < num_pots:
+                 st.divider()
+
+
+        # Add sleep and rerun for automatic refresh (remains at the end)
         refresh_interval = 10 # Refresh every 10 seconds
         time.sleep(refresh_interval)
         st.rerun()
