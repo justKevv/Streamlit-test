@@ -41,10 +41,19 @@ def show_login_page():
                 data = response.json()
                 logging.info(f"API Response: {data}")
 
+                fetched_pot_ids = None # Initialize fetched_pot_ids
+
                 # --- Adjust based on the actual structure of your API response ---
+                # Case 1: API returns a dictionary like {"pot_ids": [id1, id2]}
                 if isinstance(data, dict) and 'pot_ids' in data and isinstance(data['pot_ids'], list):
                     fetched_pot_ids = data['pot_ids']
-                    if fetched_pot_ids:
+                # Case 2: API returns a list directly like [id1, id2]
+                elif isinstance(data, list):
+                     fetched_pot_ids = data # Directly use the list
+
+                # Now check if we got pot_ids from either case
+                if fetched_pot_ids is not None: # Check if pot_ids were successfully extracted
+                    if fetched_pot_ids: # Check if the list is not empty
                         st.session_state['pot_ids'] = fetched_pot_ids
                         st.session_state['logged_in'] = True
                         st.session_state['selected_page'] = 'Dashboard' # Default to Dashboard after login
@@ -54,7 +63,7 @@ def show_login_page():
                         st.session_state['login_error'] = "No pots found for this Chat ID."
                         logging.warning(f"No pots found for chat_id: {chat_id_input}")
                 else:
-                     # Handle cases where the API response is not as expected
+                     # Handle cases where the API response is neither the expected dict nor a list
                      st.session_state['login_error'] = "Invalid response format from server."
                      logging.error(f"Invalid API response format for chat_id {chat_id_input}: {data}")
 
