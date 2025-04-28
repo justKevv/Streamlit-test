@@ -11,7 +11,7 @@ class DashboardPage:
     def __init__(self, pot_ids): # Accept a list of pot_ids
         self.title = 'Dashboard'
         self.__pot_ids = pot_ids
-        self.__base_url = 'https://api-smart-plant.vercel.app/find/data/'
+        self.__base_url = 'https://api-smart-pot-test.vercel.app/find/data/'
         # Initialize placeholders dictionary for each pot
         self.__placeholders = {pot_id: {} for pot_id in self.__pot_ids}
 

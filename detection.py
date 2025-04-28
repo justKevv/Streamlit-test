@@ -16,7 +16,7 @@ class DetectionPage:
 
         self.__model_file = 'best.pt'
         self.__model = YOLO(self.__model_file)
-        self.__url = 'https://api-smart-plant.vercel.app/get/image/' + str(pot_id)
+        self.__url = 'https://api-smart-pot-test.vercel.app/get/image/' + str(pot_id)
 
     def show(self):
         st.title('Deteksi Objek 🔍')

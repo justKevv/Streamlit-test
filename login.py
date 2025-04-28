@@ -33,7 +33,7 @@ def show_login_page():
             try:
                 # --- Replace with your actual API endpoint to get pot_ids ---
                 # Example: Assuming an endpoint /get/pots/{chat_id} returns {"pot_ids": ["id1", "id2"]}
-                api_url = f"https://api-smart-plant.vercel.app/find/user/{chat_id_input}"
+                api_url = f"https://api-smart-pot-test.vercel.app/find/user/{chat_id_input}"
                 logging.info(f"Attempting to fetch pot IDs from: {api_url}")
                 response = requests.get(api_url)
                 response.raise_for_status() # Raise an exception for bad status codes (4xx or 5xx)
