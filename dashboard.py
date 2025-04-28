@@ -35,12 +35,22 @@ class DashboardPage:
         for i, pot_id in enumerate(self.__pot_ids):
             with cols[i]:
                 st.subheader(f"Pot: {pot_id}")
-                # Create placeholders within the column for this pot
-                # Ensure the dictionary entry for the pot_id exists first
+
+                # Create nested columns for pH and Soil metrics
+                metric_cols = st.columns(2)
+                with metric_cols[0]:
+                    ph_placeholder = st.empty()
+                with metric_cols[1]:
+                    soil_placeholder = st.empty()
+
+                # Chart placeholder remains below the metrics
+                chart_placeholder = st.empty()
+
+                # Store placeholders in the dictionary
                 self.__placeholders[pot_id] = {
-                    'ph': st.empty(),
-                    'soil': st.empty(),
-                    'chart': st.empty()
+                    'ph': ph_placeholder,
+                    'soil': soil_placeholder,
+                    'chart': chart_placeholder
                 }
 
         # Button to start the blocking monitoring loop
