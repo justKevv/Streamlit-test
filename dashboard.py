@@ -37,7 +37,7 @@ class DashboardPage:
         self.__placeholders = {}
 
         # --- Arrange pots in rows ---
-        pots_per_row = 4 # Adjust this number as needed for your layout preference
+        pots_per_row = 3 # Adjust this number as needed for your layout preference
         num_pots = len(current_pot_ids)
 
         for i in range(0, num_pots, pots_per_row):
